@@ -5,6 +5,7 @@ import fetch from "node-fetch";
 import { testDB } from "./db.js";
 
 dotenv.config();
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -34,8 +35,10 @@ app.get("/", async (req, res) => {
 async function testDeepSeek() {
   console.log("🧠 Calling DeepSeek...");
 
+  const url = "https://api.deepseek.com/chat/completions";
+
   try {
-    const response = await fetch("https://api.deepseek.com/chat/completions", {
+    const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -49,6 +52,10 @@ async function testDeepSeek() {
         ]
       })
     });
+
+    if (!response.ok) {
+      throw new Error(`DeepSeek API error: ${response.status} ${response.statusText}`);
+    }
 
     const data = await response.json();
     const reply = data.choices?.[0]?.message?.content || "No reply";
