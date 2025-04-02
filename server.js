@@ -1,6 +1,7 @@
 // server.js
 import express from "express";
 import dotenv from "dotenv";
+import fetch from "node-fetch"; // <-- REQUIRED!
 import { testDB } from "./db.js";
 
 dotenv.config();
@@ -8,6 +9,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.get("/", async (req, res) => {
+  console.log("📡 / route hit");
+
   try {
     const dbResult = await testDB();
     const aiResult = await testDeepSeek();
@@ -19,6 +22,7 @@ app.get("/", async (req, res) => {
       message: "Backend is connected to both DB and DeepSeek!"
     });
   } catch (error) {
+    console.error("❌ Route error:", error);
     res.status(500).json({
       status: "🔴 Error",
       message: "Something went wrong with DB or DeepSeek",
@@ -27,8 +31,10 @@ app.get("/", async (req, res) => {
   }
 });
 
-// New helper function
+// 🔮 DeepSeek test function
 async function testDeepSeek() {
+  console.log("🧠 Calling DeepSeek...");
+
   const response = await fetch("https://api.deepseek.com/chat/completions", {
     method: "POST",
     headers: {
@@ -45,8 +51,8 @@ async function testDeepSeek() {
   });
 
   const data = await response.json();
-  const reply = data.choices?.[0]?.message?.content || "No reply";
-  return reply;
+  console.log("🤖 DeepSeek responded:", data.choices?.[0]?.message?.content);
+  return data.choices?.[0]?.message?.content || "No reply";
 }
 
 app.listen(PORT, () => {
