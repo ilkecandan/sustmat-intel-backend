@@ -1,7 +1,7 @@
 {
   "name": "sustmat-intel-backend",
   "version": "1.0.0",
-  "description": "Backend for sustainable materials intelligence dashboard",
+  "description": "Backend for Sustainable Materials Intelligence Dashboard",
   "main": "server.js",
   "type": "module",
   "scripts": {
@@ -14,8 +14,14 @@
     "node-fetch": "^3.3.2",
     "pg": "^8.11.1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "backend",
+    "node",
+    "postgresql",
+    "scraper",
+    "sustainability",
+    "materials"
+  ],
+  "author": "ilkecandan",
   "license": "MIT"
 }
-
