@@ -21,37 +21,50 @@ const scrapeDirectory = async () => {
     $(".directory-entry").each((i, el) => {
       const name = $(el).find("h2.entry-title a").text().trim();
       const url = $(el).find("h2.entry-title a").attr("href");
-      const description = $(el).find(".directory-excerpt").text().trim();
-      const extra = $(el).find(".directory-meta").text().trim();
-
-      // Later we’ll parse country/category from 'extra' if needed
+      const summary = $(el).find(".directory-excerpt").text().trim();
+      const meta = $(el).find(".directory-meta").text().trim(); // Could contain country or category
 
       startups.push({
-        name,
-        summary: description,
+        title: name,
+        summary,
         source_url: url,
         type: "startup",
         tags: ["unknown"],
-        organization: name
+        organization: name,
+        location: null // You can parse from `meta` later if needed
       });
     });
 
     console.log(`🔍 Found ${startups.length} startups`);
 
-    for (const s of startups) {
-      await pool.query(
-        `INSERT INTO developments (title, summary, source_url, type, tags, organization)
-         VALUES ($1, $2, $3, $4, $5, $6)
-         ON CONFLICT DO NOTHING`,
-        [s.name, s.summary, s.source_url, s.type, s.tags, s.organization]
-      );
+    for (const startup of startups) {
+      try {
+        await pool.query(
+          `
+          INSERT INTO developments (title, summary, source_url, type, tags, organization, location)
+          VALUES ($1, $2, $3, $4, $5, $6, $7)
+          ON CONFLICT (source_url) DO NOTHING
+          `,
+          [
+            startup.title,
+            startup.summary,
+            startup.source_url,
+            startup.type,
+            startup.tags,
+            startup.organization,
+            startup.location
+          ]
+        );
+      } catch (insertErr) {
+        console.error("⚠️ Failed to insert:", startup.title, insertErr.message);
+      }
     }
 
     console.log("✅ Scraping & saving completed.");
   } catch (err) {
-    console.error("❌ Scraper error:", err);
+    console.error("❌ Scraper error:", err.message);
   }
 };
 
+// Run it when this file is executed
 scrapeDirectory();
-
