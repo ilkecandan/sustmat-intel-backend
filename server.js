@@ -1,7 +1,7 @@
 // server.js
 import express from "express";
 import dotenv from "dotenv";
-import fetch from "node-fetch"; // <-- REQUIRED!
+import fetch from "node-fetch";
 import { testDB } from "./db.js";
 
 dotenv.config();
@@ -31,28 +31,33 @@ app.get("/", async (req, res) => {
   }
 });
 
-// 🔮 DeepSeek test function
 async function testDeepSeek() {
   console.log("🧠 Calling DeepSeek...");
 
-  const response = await fetch("https://api.deepseek.com/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${process.env.DEEPSEEK_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: "deepseek-chat",
-      messages: [
-        { role: "system", content: "You are a helpful assistant." },
-        { role: "user", content: "Hello! Just say 'Hello back.'" }
-      ]
-    })
-  });
+  try {
+    const response = await fetch("https://api.deepseek.com/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.DEEPSEEK_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "deepseek-chat",
+        messages: [
+          { role: "system", content: "You are a helpful assistant." },
+          { role: "user", content: "Hello! Just say 'Hello back.'" }
+        ]
+      })
+    });
 
-  const data = await response.json();
-  console.log("🤖 DeepSeek responded:", data.choices?.[0]?.message?.content);
-  return data.choices?.[0]?.message?.content || "No reply";
+    const data = await response.json();
+    const reply = data.choices?.[0]?.message?.content || "No reply";
+    console.log("🤖 DeepSeek responded:", reply);
+    return reply;
+  } catch (err) {
+    console.error("❌ DeepSeek failed:", err.message);
+    return "DeepSeek error";
+  }
 }
 
 app.listen(PORT, () => {
