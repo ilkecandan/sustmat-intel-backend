@@ -6,30 +6,31 @@ dotenv.config();
 
 const { Pool } = pg;
 
-// Check if the environment variable is loaded
+// Check for DATABASE_URL
 if (!process.env.DATABASE_URL) {
   console.error("❌ DATABASE_URL is missing in environment variables.");
-  process.exit(1); // Stop execution
+  process.exit(1);
 }
 
 // Initialize PostgreSQL connection pool
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
-    rejectUnauthorized: false, // Required by Railway
+    rejectUnauthorized: false // Required for Railway DB SSL
   }
 });
 
-// Function to test DB connection
+// Test the connection with a timestamp query
 export const testDB = async () => {
   console.log("🧪 Testing database connection...");
   try {
-    const res = await pool.query("SELECT NOW()");
-    console.log("✅ DB connected. Current time:", res.rows[0].now);
-    return res.rows[0];
-  } catch (err) {
-    console.error("❌ Failed to connect to database:", err);
-    throw err;
+    const result = await pool.query("SELECT NOW()");
+    const time = result.rows[0]?.now || "Unknown time";
+    console.log("✅ DB connected. Current time:", time);
+    return { now: time };
+  } catch (error) {
+    console.error("❌ Failed to connect to the database:", error.message);
+    throw error;
   }
 };
 
