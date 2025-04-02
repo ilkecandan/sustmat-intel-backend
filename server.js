@@ -3,6 +3,7 @@ import express from "express";
 import dotenv from "dotenv";
 import fetch from "node-fetch";
 import { testDB } from "./db.js";
+import { scrapeDirectory } from "./scraper-eustartups.js"; // ⬅️ NEW import
 
 dotenv.config();
 
@@ -14,12 +15,13 @@ if (!PORT) {
   throw new Error("🚨 Railway PORT is not defined in environment");
 }
 
+// 🌐 Home route: check backend, DB, and DeepSeek status
 app.get("/", async (req, res) => {
   console.log("📡 / route hit");
 
   try {
     const dbResult = await testDB();
-    const aiResult = await callDeepSeek(); // renamed to avoid confusion
+    const aiResult = await callDeepSeek();
 
     res.json({
       status: "🟢 Online",
@@ -37,7 +39,26 @@ app.get("/", async (req, res) => {
   }
 });
 
-// 💬 DeepSeek integration
+// 🧲 Run the scraper manually via URL
+app.get("/run-scraper", async (req, res) => {
+  console.log("🧲 /run-scraper route hit");
+
+  try {
+    const result = await scrapeDirectory();
+    res.json({
+      status: result.success ? "🟢 Scraper Success" : "🔴 Scraper Failed",
+      ...result
+    });
+  } catch (err) {
+    console.error("❌ Scraper route error:", err.message);
+    res.status(500).json({
+      status: "🔴 Scraper Route Failed",
+      error: err.message
+    });
+  }
+});
+
+// 💬 DeepSeek test call
 async function callDeepSeek() {
   console.log("🧠 Calling DeepSeek...");
 
