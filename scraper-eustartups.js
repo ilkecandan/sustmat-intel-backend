@@ -15,7 +15,7 @@ export const scrapeDirectory = async () => {
     await page.goto("https://www.eu-startups.com/directory/", { waitUntil: "networkidle" });
 
     console.log("🕰️ Waiting for page content...");
-    await page.waitForSelector("h2.entry-title a"); // ⬅️ Timeout removed
+    await page.waitForSelector("h2.entry-title a", { timeout: 0 }); // ⬅️ Timeout removed
 
     console.log("🔍 Directory loaded.");
 
@@ -56,24 +56,9 @@ export const scrapeDirectory = async () => {
 
     console.log(`🧾 Extracted ${startups.length} startups.`);
 
-    // Keywords for sustainability filtering
-    const sustainabilityKeywords = [
-      "sustainable", "green", "climate", "carbon", "renewable", "eco", "biotech", "circular",
-      "environment", "waste", "solar", "clean energy", "energy", "recycling", "materials", "material",
-      "biomaterial", "decarbon", "agritech"
-    ];
-
-    // Filter only sustainable startups
-    const filteredStartups = startups.filter(startup => {
-      const text = `${startup.title} ${startup.summary} ${startup.tags.join(" ")}`.toLowerCase();
-      return sustainabilityKeywords.some(keyword => text.includes(keyword));
-    });
-
-    console.log(`🌱 Filtered down to ${filteredStartups.length} sustainable startups.`);
-
     let insertedCount = 0;
 
-    for (const startup of filteredStartups) {
+    for (const startup of startups) {
       try {
         await pool.query(
           `
@@ -98,7 +83,7 @@ export const scrapeDirectory = async () => {
     }
 
     console.log(`✅ Done. Inserted ${insertedCount} new entries.`);
-    return { inserted: insertedCount, total: filteredStartups.length, success: true };
+    return { inserted: insertedCount, total: startups.length, success: true };
   } catch (err) {
     console.error("❌ Scraper error:", err.message);
     return { success: false, error: err.message };
