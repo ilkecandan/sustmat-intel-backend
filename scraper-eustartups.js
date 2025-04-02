@@ -1,54 +1,51 @@
 // scraper-eustartups.js
-import fetch from "node-fetch";
-import * as cheerio from "cheerio"; // ✅ FIXED
+import { chromium } from "playwright";
 import dotenv from "dotenv";
 import pool from "./db.js";
 
 dotenv.config();
 
-const BASE_URL = "https://www.eu-startups.com/directory/";
-
 export const scrapeDirectory = async () => {
-  console.log("🕵️ Starting EU-Startups scrape...");
+  console.log("🧙‍♀️ Launching Playwright…");
+
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
 
   try {
-    const res = await fetch(BASE_URL);
-    if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
+    await page.goto("https://www.eu-startups.com/directory/", { waitUntil: "networkidle" });
+    await page.waitForSelector(".directory-entry");
 
-    const html = await res.text();
-    const $ = cheerio.load(html);
+    console.log("🔍 Directory loaded.");
 
-    const startups = [];
+    const startups = await page.$$eval(".directory-entry", entries => {
+      return entries.map(el => {
+        const name = el.querySelector("h2.entry-title a")?.innerText.trim();
+        const url = el.querySelector("h2.entry-title a")?.href;
+        const summary = el.querySelector(".directory-excerpt")?.innerText.trim();
+        const meta = el.querySelector(".directory-meta")?.innerText.trim();
 
-    $(".directory-entry").each((i, el) => {
-      const name = $(el).find("h2.entry-title a").text().trim();
-      const url = $(el).find("h2.entry-title a").attr("href");
-      const summary = $(el).find(".directory-excerpt").text().trim();
-      const meta = $(el).find(".directory-meta").text().trim();
-
-      startups.push({
-        title: name,
-        summary,
-        source_url: url,
-        type: "startup",
-        tags: ["unknown"],
-        organization: name,
-        location: meta || null
+        return {
+          title: name,
+          summary,
+          source_url: url,
+          type: "startup",
+          tags: ["unknown"],
+          organization: name,
+          location: meta || null
+        };
       });
     });
 
-    console.log(`🔍 Found ${startups.length} startups`);
+    console.log(`🧾 Extracted ${startups.length} startups.`);
 
     let insertedCount = 0;
 
     for (const startup of startups) {
       try {
         await pool.query(
-          `
-          INSERT INTO developments (title, summary, source_url, type, tags, organization, location)
-          VALUES ($1, $2, $3, $4, $5, $6, $7)
-          ON CONFLICT (source_url) DO NOTHING
-          `,
+          `INSERT INTO developments (title, summary, source_url, type, tags, organization, location)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)
+           ON CONFLICT (source_url) DO NOTHING`,
           [
             startup.title,
             startup.summary,
@@ -65,15 +62,18 @@ export const scrapeDirectory = async () => {
       }
     }
 
-    console.log(`✅ Scraping & saving completed. Inserted ${insertedCount} records.`);
-    return { success: true, inserted: insertedCount, total: startups.length };
+    console.log(`✅ Done. Inserted ${insertedCount} new entries.`);
+    return { inserted: insertedCount, total: startups.length, success: true };
+
   } catch (err) {
     console.error("❌ Scraper error:", err.message);
     return { success: false, error: err.message };
+  } finally {
+    await browser.close();
   }
 };
 
-// Auto-run if file is directly called
+// Run manually
 if (process.argv[1] === new URL(import.meta.url).pathname) {
   scrapeDirectory();
 }
