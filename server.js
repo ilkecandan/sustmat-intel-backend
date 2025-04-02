@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import fetch from "node-fetch";
 import { testDB } from "./db.js";
 import { scrapeDirectory } from "./scraper-eustartups.js"; // ⬅️ Scraper import
+import pool from "./db.js"; // ⬅️ Added for /dev/all
 
 dotenv.config();
 
@@ -77,7 +78,7 @@ async function callDeepSeek() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.DEEPSEEK_API_KEY}`
+        Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`
       },
       body: JSON.stringify({
         model: "deepseek-chat",
