@@ -1,28 +1,26 @@
 // db.js
 import pg from "pg";
 import dotenv from "dotenv";
-
-// Load environment variables from .env or Railway
 dotenv.config();
 
 const { Pool } = pg;
 
-// Initialize connection pool
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
-    rejectUnauthorized: false // Required by Railway's free Postgres SSL
+    rejectUnauthorized: false
   }
 });
 
-// Simple test query to check DB connection
 export const testDB = async () => {
+  console.log("🧪 Testing database connection...");
   try {
     const res = await pool.query("SELECT NOW()");
-    return res.rows[0]; // { now: '2025-04-02T...' }
+    console.log("✅ DB connected. Time:", res.rows[0]);
+    return res.rows[0];
   } catch (err) {
-    console.error("🔴 DB error:", err);
-    return null;
+    console.error("❌ DB connection failed:", err);
+    throw err;
   }
 };
 
