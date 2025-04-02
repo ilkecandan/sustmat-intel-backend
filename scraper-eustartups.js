@@ -24,10 +24,14 @@ export const scrapeDirectory = async () => {
   try {
     await page.goto("https://www.eu-startups.com/directory/", { waitUntil: "networkidle" });
 
-    console.log("🕰️ Waiting for page content...");
-    await page.waitForSelector("h2.entry-title a", { timeout: 0 });
+    console.log("⏳ Giving it some breathing time...");
+    await page.waitForTimeout(7000); // Let the page fully load
 
-    console.log("🔍 Directory loaded.");
+    // Optional: Log a snippet to debug page content
+    const html = await page.content();
+    console.log("📄 HTML snippet:", html.slice(0, 500));
+
+    console.log("🔍 Attempting to extract startups...");
 
     const startups = await page.$$eval(".fusion-post-content", (entries) => {
       return entries.map((el) => {
