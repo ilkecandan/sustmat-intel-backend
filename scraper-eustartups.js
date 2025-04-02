@@ -13,6 +13,8 @@ const scrapeDirectory = async () => {
 
   try {
     const res = await fetch(BASE_URL);
+    if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
+    
     const html = await res.text();
     const $ = cheerio.load(html);
 
@@ -22,20 +24,22 @@ const scrapeDirectory = async () => {
       const name = $(el).find("h2.entry-title a").text().trim();
       const url = $(el).find("h2.entry-title a").attr("href");
       const summary = $(el).find(".directory-excerpt").text().trim();
-      const meta = $(el).find(".directory-meta").text().trim(); // Could contain country or category
+      const meta = $(el).find(".directory-meta").text().trim();
 
       startups.push({
         title: name,
         summary,
         source_url: url,
         type: "startup",
-        tags: ["unknown"],
+        tags: ["unknown"], // Placeholder — replace later with AI or parsing logic
         organization: name,
-        location: null // You can parse from `meta` later if needed
+        location: meta || null // You can refine this later to extract country/category
       });
     });
 
     console.log(`🔍 Found ${startups.length} startups`);
+
+    let insertedCount = 0;
 
     for (const startup of startups) {
       try {
@@ -55,16 +59,17 @@ const scrapeDirectory = async () => {
             startup.location
           ]
         );
-      } catch (insertErr) {
-        console.error("⚠️ Failed to insert:", startup.title, insertErr.message);
+        insertedCount++;
+      } catch (err) {
+        console.error("⚠️ Insert failed for:", startup.title, "-", err.message);
       }
     }
 
-    console.log("✅ Scraping & saving completed.");
+    console.log(`✅ Scraping & saving completed. Inserted ${insertedCount} records.`);
   } catch (err) {
     console.error("❌ Scraper error:", err.message);
   }
 };
 
-// Run it when this file is executed
+// Run scraper if this file is directly executed
 scrapeDirectory();
