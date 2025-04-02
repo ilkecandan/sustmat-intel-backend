@@ -35,10 +35,8 @@ app.get("/", async (req, res) => {
 async function testDeepSeek() {
   console.log("🧠 Calling DeepSeek...");
 
-  const url = "https://api.deepseek.com/chat/completions";
-
   try {
-    const response = await fetch(url, {
+    const response = await fetch("https://api.deepseek.com/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -54,7 +52,8 @@ async function testDeepSeek() {
     });
 
     if (!response.ok) {
-      throw new Error(`DeepSeek API error: ${response.status} ${response.statusText}`);
+      const text = await response.text();
+      throw new Error(`DeepSeek error: ${response.status} ${response.statusText} — ${text}`);
     }
 
     const data = await response.json();
@@ -63,7 +62,7 @@ async function testDeepSeek() {
     return reply;
   } catch (err) {
     console.error("❌ DeepSeek failed:", err.message);
-    return "DeepSeek error";
+    return "DeepSeek error: " + err.message;
   }
 }
 
