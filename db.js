@@ -6,21 +6,18 @@ dotenv.config();
 
 const { Pool } = pg;
 
-// Check for DATABASE_URL
 if (!process.env.DATABASE_URL) {
   console.error("❌ DATABASE_URL is missing in environment variables.");
   process.exit(1);
 }
 
-// Initialize PostgreSQL connection pool
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
-    rejectUnauthorized: false // Required for Railway DB SSL
+    rejectUnauthorized: false
   }
 });
 
-// Test the connection with a timestamp query
 export const testDB = async () => {
   console.log("🧪 Testing database connection...");
   try {
