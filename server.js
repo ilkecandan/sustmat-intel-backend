@@ -7,14 +7,19 @@ import { testDB } from "./db.js";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+
+// 🛠️ Force correct port binding for Railway
+const PORT = process.env.PORT;
+if (!PORT) {
+  throw new Error("🚨 Railway PORT is not defined in environment");
+}
 
 app.get("/", async (req, res) => {
   console.log("📡 / route hit");
 
   try {
     const dbResult = await testDB();
-    const aiResult = await testDeepSeek();
+    const aiResult = await callDeepSeek(); // renamed to avoid confusion
 
     res.json({
       status: "🟢 Online",
@@ -32,7 +37,8 @@ app.get("/", async (req, res) => {
   }
 });
 
-async function testDeepSeek() {
+// 💬 DeepSeek integration
+async function callDeepSeek() {
   console.log("🧠 Calling DeepSeek...");
 
   try {
@@ -58,7 +64,7 @@ async function testDeepSeek() {
 
     const data = await response.json();
     const reply = data.choices?.[0]?.message?.content || "No reply";
-    console.log("🤖 DeepSeek responded:", reply);
+    console.log("🤖 DeepSeek replied:", reply);
     return reply;
   } catch (err) {
     console.error("❌ DeepSeek failed:", err.message);
