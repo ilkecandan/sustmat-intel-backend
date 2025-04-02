@@ -13,25 +13,31 @@ export const scrapeDirectory = async () => {
 
   try {
     await page.goto("https://www.eu-startups.com/directory/", { waitUntil: "networkidle" });
-    await page.waitForSelector(".directory-entry");
+    await page.waitForSelector("h2.entry-title a", { timeout: 60000 });
 
     console.log("🔍 Directory loaded.");
 
-    const startups = await page.$$eval(".directory-entry", entries => {
-      return entries.map(el => {
+    const startups = await page.$$eval(".fusion-post-content", (entries) => {
+      return entries.map((el) => {
         const name = el.querySelector("h2.entry-title a")?.innerText.trim();
         const url = el.querySelector("h2.entry-title a")?.href;
-        const summary = el.querySelector(".directory-excerpt")?.innerText.trim();
-        const meta = el.querySelector(".directory-meta")?.innerText.trim();
+        const category = el.innerHTML.includes("Category:") ? el.innerHTML.split("Category:")[1].split("<")[0].trim() : null;
+        const location = el.innerHTML.includes("Based in:") ? el.innerHTML.split("Based in:")[1].split("<")[0].trim() : null;
+        const tags = el.innerHTML.includes("Tags:") ? el.innerHTML.split("Tags:")[1].split("<")[0].split(",").map(t => t.trim()) : ["unknown"];
+
+        const summary = Array.from(el.querySelectorAll("p"))
+          .map((p) => p.innerText)
+          .join(" ")
+          .trim();
 
         return {
           title: name,
           summary,
           source_url: url,
           type: "startup",
-          tags: ["unknown"],
+          tags,
           organization: name,
-          location: meta || null
+          location: location || category || null
         };
       });
     });
