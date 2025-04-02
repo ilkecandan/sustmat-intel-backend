@@ -8,13 +8,13 @@ dotenv.config();
 
 const BASE_URL = "https://www.eu-startups.com/directory/";
 
-const scrapeDirectory = async () => {
+export const scrapeDirectory = async () => {
   console.log("🕵️ Starting EU-Startups scrape...");
 
   try {
     const res = await fetch(BASE_URL);
     if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
-    
+
     const html = await res.text();
     const $ = cheerio.load(html);
 
@@ -31,9 +31,9 @@ const scrapeDirectory = async () => {
         summary,
         source_url: url,
         type: "startup",
-        tags: ["unknown"], // Placeholder — replace later with AI or parsing logic
+        tags: ["unknown"], // Placeholder — refine later with AI classification
         organization: name,
-        location: meta || null // You can refine this later to extract country/category
+        location: meta || null
       });
     });
 
@@ -66,10 +66,14 @@ const scrapeDirectory = async () => {
     }
 
     console.log(`✅ Scraping & saving completed. Inserted ${insertedCount} records.`);
+    return { success: true, inserted: insertedCount, total: startups.length };
   } catch (err) {
     console.error("❌ Scraper error:", err.message);
+    return { success: false, error: err.message };
   }
 };
 
-// Run scraper if this file is directly executed
-scrapeDirectory();
+// If executed directly, run the scraper
+if (process.argv[1] === new URL(import.meta.url).pathname) {
+  scrapeDirectory();
+}
