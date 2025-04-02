@@ -8,14 +8,24 @@ dotenv.config();
 export const scrapeDirectory = async () => {
   console.log("🧙‍♀️ Launching Playwright…");
 
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({
+    headless: true,
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-accelerated-2d-canvas",
+      "--no-zygote",
+      "--disable-gpu"
+    ]
+  });
   const page = await browser.newPage();
 
   try {
     await page.goto("https://www.eu-startups.com/directory/", { waitUntil: "networkidle" });
 
     console.log("🕰️ Waiting for page content...");
-    await page.waitForSelector("h2.entry-title a", { timeout: 0 }); // ⬅️ Timeout removed
+    await page.waitForSelector("h2.entry-title a", { timeout: 0 });
 
     console.log("🔍 Directory loaded.");
 
