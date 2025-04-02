@@ -3,7 +3,7 @@ import express from "express";
 import dotenv from "dotenv";
 import fetch from "node-fetch";
 import { testDB } from "./db.js";
-import { scrapeDirectory } from "./scraper-eustartups.js"; // ⬅️ NEW import
+import { scrapeDirectory } from "./scraper-eustartups.js"; // ⬅️ Scraper import
 
 dotenv.config();
 
@@ -39,7 +39,7 @@ app.get("/", async (req, res) => {
   }
 });
 
-// 🧲 Run the scraper manually via URL
+// 🧲 Manual trigger for the scraper
 app.get("/run-scraper", async (req, res) => {
   console.log("🧲 /run-scraper route hit");
 
@@ -55,6 +55,16 @@ app.get("/run-scraper", async (req, res) => {
       status: "🔴 Scraper Route Failed",
       error: err.message
     });
+  }
+});
+
+// 🔍 Debug: Show latest entries in DB (for development)
+app.get("/dev/all", async (req, res) => {
+  try {
+    const { rows } = await pool.query("SELECT * FROM developments ORDER BY id DESC LIMIT 10");
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
