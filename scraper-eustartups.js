@@ -23,8 +23,16 @@ export const scrapeDirectory = async () => {
 
   try {
     await page.goto("https://www.eu-startups.com/directory/", { waitUntil: "networkidle" });
-    console.log("🌬️ Initial page loaded, scrolling begins...");
+    console.log("⏳ Giving it some breathing time...");
+    await page.waitForTimeout(7000); // Let the page fully load
 
+    // Optional: Log a snippet to debug page content
+    const html = await page.content();
+    console.log("📄 HTML snippet:", html.slice(0, 500));
+
+    console.log("🔍 Attempting to extract startups...");
+
+    // Scrolling logic to load more startups
     let previousHeight;
     let scrollCount = 0;
     while (scrollCount < 20) {
@@ -49,7 +57,11 @@ export const scrapeDirectory = async () => {
           ? el.innerHTML.split("Based in:")[1].split("<")[0].trim()
           : null;
         const tags = el.innerHTML.includes("Tags:")
-          ? el.innerHTML.split("Tags:")[1].split("<")[0].split(",").map((t) => t.trim())
+          ? el.innerHTML
+              .split("Tags:")[1]
+              .split("<")[0]
+              .split(",")
+              .map((t) => t.trim())
           : ["unknown"];
 
         const summary = Array.from(el.querySelectorAll("p"))
