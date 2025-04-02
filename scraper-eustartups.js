@@ -1,6 +1,6 @@
 // scraper-eustartups.js
 import fetch from "node-fetch";
-import cheerio from "cheerio";
+import * as cheerio from "cheerio"; // ✅ FIXED
 import dotenv from "dotenv";
 import pool from "./db.js";
 
@@ -31,7 +31,7 @@ export const scrapeDirectory = async () => {
         summary,
         source_url: url,
         type: "startup",
-        tags: ["unknown"], // Placeholder — refine later with AI classification
+        tags: ["unknown"],
         organization: name,
         location: meta || null
       });
@@ -73,7 +73,7 @@ export const scrapeDirectory = async () => {
   }
 };
 
-// If executed directly, run the scraper
+// Auto-run if file is directly called
 if (process.argv[1] === new URL(import.meta.url).pathname) {
   scrapeDirectory();
 }
