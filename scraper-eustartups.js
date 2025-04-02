@@ -23,15 +23,20 @@ export const scrapeDirectory = async () => {
 
   try {
     await page.goto("https://www.eu-startups.com/directory/", { waitUntil: "networkidle" });
+    console.log("🌬️ Initial page loaded, scrolling begins...");
 
-    console.log("⏳ Giving it some breathing time...");
-    await page.waitForTimeout(7000); // Let the page fully load
+    let previousHeight;
+    let scrollCount = 0;
+    while (scrollCount < 20) {
+      previousHeight = await page.evaluate("document.body.scrollHeight");
+      await page.evaluate("window.scrollTo(0, document.body.scrollHeight)");
+      await page.waitForTimeout(2500); // pause for content to load
+      const newHeight = await page.evaluate("document.body.scrollHeight");
+      if (newHeight === previousHeight) break;
+      scrollCount++;
+    }
 
-    // Optional: Log a snippet to debug page content
-    const html = await page.content();
-    console.log("📄 HTML snippet:", html.slice(0, 500));
-
-    console.log("🔍 Attempting to extract startups...");
+    console.log("🧹 Scrolling done. Extracting data...");
 
     const startups = await page.$$eval(".fusion-post-content", (entries) => {
       return entries.map((el) => {
@@ -44,11 +49,7 @@ export const scrapeDirectory = async () => {
           ? el.innerHTML.split("Based in:")[1].split("<")[0].trim()
           : null;
         const tags = el.innerHTML.includes("Tags:")
-          ? el.innerHTML
-              .split("Tags:")[1]
-              .split("<")[0]
-              .split(",")
-              .map((t) => t.trim())
+          ? el.innerHTML.split("Tags:")[1].split("<")[0].split(",").map((t) => t.trim())
           : ["unknown"];
 
         const summary = Array.from(el.querySelectorAll("p"))
@@ -68,11 +69,26 @@ export const scrapeDirectory = async () => {
       });
     });
 
-    console.log(`🧾 Extracted ${startups.length} startups.`);
+    console.log(`📊 Total scraped: ${startups.length}`);
+
+    // Keywords for sustainability filtering
+    const sustainabilityKeywords = [
+      "sustainable", "green", "climate", "carbon", "renewable", "eco", "biotech", "circular",
+      "environment", "waste", "solar", "clean energy", "energy", "recycling", "materials", "material",
+      "biomaterial", "decarbon", "agritech"
+    ];
+
+    // Filter only sustainable startups
+    const filteredStartups = startups.filter(startup => {
+      const text = `${startup.title} ${startup.summary} ${startup.tags.join(" ")}`.toLowerCase();
+      return sustainabilityKeywords.some(keyword => text.includes(keyword));
+    });
+
+    console.log(`🌱 Filtered to ${filteredStartups.length} sustainable startups.`);
 
     let insertedCount = 0;
 
-    for (const startup of startups) {
+    for (const startup of filteredStartups) {
       try {
         await pool.query(
           `
@@ -87,7 +103,7 @@ export const scrapeDirectory = async () => {
             startup.type,
             startup.tags,
             startup.organization,
-            startup.location,
+            startup.location
           ]
         );
         insertedCount++;
@@ -96,8 +112,8 @@ export const scrapeDirectory = async () => {
       }
     }
 
-    console.log(`✅ Done. Inserted ${insertedCount} new entries.`);
-    return { inserted: insertedCount, total: startups.length, success: true };
+    console.log(`✅ Done. Inserted ${insertedCount} entries out of ${filteredStartups.length} sustainable startups.`);
+    return { inserted: insertedCount, total: filteredStartups.length, success: true };
   } catch (err) {
     console.error("❌ Scraper error:", err.message);
     return { success: false, error: err.message };
