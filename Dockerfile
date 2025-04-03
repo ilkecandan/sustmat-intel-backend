@@ -1,20 +1,23 @@
-# Use official Node image
-FROM mcr.microsoft.com/playwright:v1.41.1-jammy
+# Use official Node.js image
+FROM node:16
 
-# Set working directory
+# Set the working directory
 WORKDIR /app
 
-# Copy everything
-COPY . .
+# Copy package.json and package-lock.json
+COPY package*.json ./
 
 # Install dependencies
 RUN npm install
 
-# (Optional but safer) Install the browsers
+# Copy the rest of the app
+COPY . .
+
+# Install Playwright dependencies
 RUN npx playwright install --with-deps
 
-# Set environment variable (Railway passes PORT)
-ENV PORT=8080
+# Expose the port the app will run on
+EXPOSE 8080
 
-# Run your app
+# Start the application
 CMD ["npm", "start"]
