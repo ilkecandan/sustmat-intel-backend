@@ -1,4 +1,3 @@
-// scraper-eustartups.js
 import { chromium } from "playwright";
 import dotenv from "dotenv";
 import pool from "./db.js";
@@ -25,10 +24,6 @@ export const scrapeDirectory = async () => {
     await page.goto("https://www.eu-startups.com/directory/", { waitUntil: "networkidle" });
     console.log("⏳ Giving it some breathing time...");
     await page.waitForTimeout(7000); // Let the page fully load
-
-    // Optional: Log a snippet to debug page content
-    const html = await page.content();
-    console.log("📄 HTML snippet:", html.slice(0, 500));
 
     console.log("🔍 Attempting to extract startups...");
 
