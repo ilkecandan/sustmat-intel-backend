@@ -9,12 +9,12 @@ COPY package*.json ./
 
 # Install necessary dependencies for Playwright
 RUN apt-get update && apt-get install -y \
-  libjpeg-turbo8 \
-  libvpx6 \
-  libicu66 \
-  libenchant-2-2 \
-  libevent-2.1-7 \
-  ttf-ubuntu-font-family \
+  libjpeg62-turbo \
+  libvpx5 \
+  libicu63 \
+  libenchant1c2a \
+  libevent-2.0-5 \
+  ttf-mscorefonts-installer \
   wget \
   ca-certificates \
   fonts-liberation \
