@@ -1,5 +1,5 @@
-# Use official Node.js image
-FROM node:16
+# Use official Node.js image, specify version 18 for compatibility with Playwright
+FROM node:18
 
 # Set the working directory
 WORKDIR /app
