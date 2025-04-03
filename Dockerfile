@@ -14,7 +14,6 @@ RUN apt-get update && apt-get install -y \
   libicu63 \
   libenchant1c2a \
   libevent-2.0-5 \
-  ttf-mscorefonts-installer \
   wget \
   ca-certificates \
   fonts-liberation \
@@ -30,6 +29,11 @@ RUN apt-get update && apt-get install -y \
   libatk-bridge2.0-0 \
   libgdk-pixbuf2.0-0 \
   && rm -rf /var/lib/apt/lists/*
+
+# Install Microsoft core fonts (this will fix the 'ttf-mscorefonts-installer' issue)
+RUN apt-get update && apt-get install -y \
+  ttf-mscorefonts-installer \
+  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install dependencies
 RUN npm install
