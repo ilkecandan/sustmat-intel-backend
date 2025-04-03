@@ -21,7 +21,7 @@ export const scrapeDirectory = async () => {
   const page = await browser.newPage();
 
   try {
-    await page.goto("https://www.eu-startups.com", { waitUntil: "networkidle" });
+    await page.goto("https://www.eu-startups.com/category/switzerland-startups/", { waitUntil: "networkidle" });
     console.log("⏳ Giving it some breathing time...");
     await page.waitForTimeout(7000); // Let the page fully load
 
